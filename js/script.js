@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initProductFilter();
     initTestimonialSlider();
     initParallax();
+    initGalleryLightbox();
 });
 
 // ==================== NAVIGATION ====================
@@ -89,7 +90,8 @@ function initScrollAnimations() {
                 if (parent && (parent.classList.contains('features-grid') ||
                                parent.classList.contains('products-grid') ||
                                parent.classList.contains('recipes-grid') ||
-                               parent.classList.contains('values-grid'))) {
+                               parent.classList.contains('values-grid') ||
+                               parent.classList.contains('gallery-grid'))) {
                     const siblings = Array.from(parent.children);
                     const index = siblings.indexOf(entry.target);
                     entry.target.style.transitionDelay = `${index * 0.1}s`;
@@ -103,7 +105,7 @@ function initScrollAnimations() {
     animatedElements.forEach(el => observer.observe(el));
 
     // Auto-add fade-in class to cards
-    const cards = document.querySelectorAll('.feature-card, .product-card, .recipe-card, .value-card');
+    const cards = document.querySelectorAll('.feature-card, .product-card, .recipe-card, .value-card, .gallery-item');
     cards.forEach(card => {
         card.classList.add('fade-in');
         observer.observe(card);
@@ -311,6 +313,73 @@ function initParallax() {
             const yPos = -(scrolled * speed);
             el.style.transform = `translateY(${yPos}px)`;
         });
+    });
+}
+
+// ==================== GALLERY LIGHTBOX ====================
+function initGalleryLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    if (!lightbox) return;
+
+    const galleryItems = document.querySelectorAll('.gallery-item');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxClose = document.getElementById('lightbox-close');
+    const lightboxPrev = document.getElementById('lightbox-prev');
+    const lightboxNext = document.getElementById('lightbox-next');
+    const lightboxCounter = document.getElementById('lightbox-counter');
+
+    const images = [];
+    galleryItems.forEach((item) => {
+        const img = item.querySelector('img');
+        if (img) images.push(img.src);
+    });
+
+    let currentIndex = 0;
+
+    galleryItems.forEach((item, index) => {
+        item.addEventListener('click', () => {
+            currentIndex = index;
+            openLightbox();
+        });
+    });
+
+    function openLightbox() {
+        lightboxImg.src = images[currentIndex];
+        lightboxCounter.textContent = (currentIndex + 1) + ' / ' + images.length;
+        lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    lightboxClose.addEventListener('click', closeLightbox);
+
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) closeLightbox();
+    });
+
+    lightboxPrev.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentIndex = (currentIndex - 1 + images.length) % images.length;
+        lightboxImg.src = images[currentIndex];
+        lightboxCounter.textContent = (currentIndex + 1) + ' / ' + images.length;
+    });
+
+    lightboxNext.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentIndex = (currentIndex + 1) % images.length;
+        lightboxImg.src = images[currentIndex];
+        lightboxCounter.textContent = (currentIndex + 1) + ' / ' + images.length;
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (!lightbox.classList.contains('active')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') lightboxPrev.click();
+        if (e.key === 'ArrowRight') lightboxNext.click();
     });
 }
 
